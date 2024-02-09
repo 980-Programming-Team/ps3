@@ -29,10 +29,10 @@ public class SwerveDrive extends SubsystemBase {
    imuStatus = new PigeonIMU.GeneralStatus();
    ypr = new double [3];
    imu.setYaw(0);
-   backleft = new SwervePod(4);
-   backright = new SwervePod(5);
-   frontright = new SwervePod(2);
-   frontleft = new SwervePod(3);
+   backleft = new SwervePod(4,4);
+   backright = new SwervePod(5,5);
+   frontright = new SwervePod(2,2);
+   frontleft = new SwervePod(3,3);
    r = Math.sqrt((L * L) + (W * W));
   }
   

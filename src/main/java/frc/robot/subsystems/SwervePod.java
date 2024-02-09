@@ -13,6 +13,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -27,9 +28,20 @@ public class SwervePod extends SubsystemBase {
   private double S_P = 1.0/150;
   private double S_I = 0;
   private double S_D = 0;
+  
+  private PIDController velocityControl;
+  private final double SPEED_LIMIT = 11;
+  private SimpleMotorFeedforward ff;
+  private boolean manualOveride;
+  private final double D_P = 0.5;
+  private final double D_I = 0.0;
+  private final double D_D = 0.0;
+  private final double KS = 0.05;
+  private final double KV = 12.0 / 11.5; // actual max speed
 
 
-  public SwervePod(int driveID) {
+
+  /*public SwervePod(int driveID) {
     driveMotor = new CANSparkMax(driveID, MotorType.kBrushless);
     swerveMotor = new CANSparkFlex(driveID + 10, MotorType.kBrushless);
     //fieldAdjust = 0;
@@ -41,7 +53,7 @@ public class SwervePod extends SubsystemBase {
     directionControl.enableContinuousInput(-180, 180);
     sonic.setPositionConversionFactor(((4 / 12.0) * Math.PI) / 8.14);
     sonic.setVelocityConversionFactor(((4 / 12.0) * Math.PI) / (8.14 * 60));
-  }
+  }*/
 
   public SwervePod(int driveID, int spareID) {
     driveMotor = new CANSparkMax(driveID, MotorType.kBrushless);
@@ -55,7 +67,10 @@ public class SwervePod extends SubsystemBase {
     directionControl.enableContinuousInput(-180, 180);
     sonic.setPositionConversionFactor(((4 / 12.0) * Math.PI) / 8.14);
     sonic.setVelocityConversionFactor(((4 / 12.0) * Math.PI) / (8.14 * 60));
-
+    
+    manualOveride = false;
+    velocityControl = new PIDController(D_P, D_I, D_D);
+    ff = new SimpleMotorFeedforward (KS, KV);
   }
 
   @Override
@@ -77,12 +92,6 @@ public class SwervePod extends SubsystemBase {
 
   public double getAngle() {
     double angle = compass.getAbsolutePosition().getValue();
-    /*if(angle > 180) {
-      angle -= 360;
-    }
-    if(angle < -180) {
-      angle +=360;
-    }*/
     return angle;
   }
   public void turnPod(double turn) {
@@ -115,5 +124,9 @@ public class SwervePod extends SubsystemBase {
     else {
       driveMotor.set(0);
     }
+  }
+  public void setManualOveride(boolean manualOveride) {
+    this.manualOveride = manualOveride;
+    
   }
 }
