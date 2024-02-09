@@ -18,10 +18,12 @@ public class SwerveDrive extends SubsystemBase {
   private SwervePod backright;
   private SwervePod frontright;
   private SwervePod frontleft;
+
   private PigeonIMU imu;
   private PigeonIMU.GeneralStatus imuStatus;
   private int imuErrorCode;
   private double[] ypr;
+
   private boolean fieldOriented = false;
 
   public SwerveDrive() {
@@ -29,12 +31,16 @@ public class SwerveDrive extends SubsystemBase {
    imuStatus = new PigeonIMU.GeneralStatus();
    ypr = new double [3];
    imu.setYaw(0);
+
    backleft = new SwervePod(4,4);
    backright = new SwervePod(5,5);
    frontright = new SwervePod(2,2);
    frontleft = new SwervePod(3,3);
+
    r = Math.sqrt((L * L) + (W * W));
   }
+
+  //TODO add imu reset method
   
   @Override
   public void periodic() {

@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-
-
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkMax;
@@ -22,17 +20,19 @@ public class SwervePod extends SubsystemBase {
   private CANSparkFlex swerveMotor;
   private CANcoder compass;
   private RelativeEncoder sonic;
+  private int positionID;
+
   private PIDController directionControl; 
-  //private double fieldAdjust;
-  private int podID;
+
   private double S_P = 1.0/150;
   private double S_I = 0;
   private double S_D = 0;
   
   private PIDController velocityControl;
-  private final double SPEED_LIMIT = 11;
+  private final double SPEED_LIMIT = 11;//Actual top speed is about 11.7, limiting for vel control
   private SimpleMotorFeedforward ff;
   private boolean manualOveride;
+
   private final double D_P = 0.5;
   private final double D_I = 0.0;
   private final double D_D = 0.0;
@@ -55,18 +55,20 @@ public class SwervePod extends SubsystemBase {
     sonic.setVelocityConversionFactor(((4 / 12.0) * Math.PI) / (8.14 * 60));
   }*/
 
-  public SwervePod(int driveID, int spareID) {
-    driveMotor = new CANSparkMax(driveID, MotorType.kBrushless);
-    swerveMotor = new CANSparkFlex(spareID + 10, MotorType.kBrushless);
+  public SwervePod(int positionID, int podID) {
+    this.positionID = positionID;
+    driveMotor = new CANSparkMax(positionID, MotorType.kBrushless);
+    swerveMotor = new CANSparkFlex(podID + 10, MotorType.kBrushless);
     //fieldAdjust = 0;
 
     sonic = driveMotor.getEncoder();
-    compass = new CANcoder(spareID + 20);
-    podID = driveID;
+    sonic.setPositionConversionFactor(((4 / 12.0) * Math.PI) / 8.14);//circumference for 4" wheel divided by 12" to a foot / gear ratio * -> feet
+    sonic.setVelocityConversionFactor(((4 / 12.0) * Math.PI) / (8.14 * 60));//circumference for 4" wheel divided by 12" to a foot / gear ratio * convert to seconds -> feet per second
+  
+    compass = new CANcoder(podID + 20);
+
     directionControl = new PIDController(S_P, S_I, S_D);
     directionControl.enableContinuousInput(-180, 180);
-    sonic.setPositionConversionFactor(((4 / 12.0) * Math.PI) / 8.14);
-    sonic.setVelocityConversionFactor(((4 / 12.0) * Math.PI) / (8.14 * 60));
     
     manualOveride = false;
     velocityControl = new PIDController(D_P, D_I, D_D);
@@ -75,9 +77,9 @@ public class SwervePod extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("speed" + podID, getSpeed()); 
-    SmartDashboard.putNumber("distance" + podID, getDistance());
-    SmartDashboard.putNumber("angle" + podID, getAngle());
+    SmartDashboard.putNumber("speed" + positionID, getSpeed()); 
+    SmartDashboard.putNumber("distance" + positionID, getDistance());
+    SmartDashboard.putNumber("angle" + positionID, getAngle());
   }
 
   public double getSpeed() {
@@ -91,9 +93,10 @@ public class SwervePod extends SubsystemBase {
   }
 
   public double getAngle() {
-    double angle = compass.getAbsolutePosition().getValue();
+    double angle = compass.getAbsolutePosition().getValue() * 360;
     return angle;
   }
+
   public void turnPod(double turn) {
     swerveMotor.set(turn);
   }
@@ -116,7 +119,7 @@ public class SwervePod extends SubsystemBase {
       turnPod(directionControl.calculate(getAngle(), direction));
   }
   public void drivePod(double drive, double direction) {
-    //feildAdjust=yaw;
+    //TODO put in velocity control
     setDirection(direction);
     if(Math.abs(drive) > .1){
       driveMotor.set(drive);
