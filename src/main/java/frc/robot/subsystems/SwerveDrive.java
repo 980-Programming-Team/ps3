@@ -40,8 +40,9 @@ public class SwerveDrive extends SubsystemBase {
    r = Math.sqrt((L * L) + (W * W));
   }
 
-  //TODO add imu reset method
-  
+  public void resetYaw(){
+    imu.setYaw(0);
+  }  
   @Override
   public void periodic() {
     imuErrorCode = imu.getGeneralStatus(imuStatus).value;

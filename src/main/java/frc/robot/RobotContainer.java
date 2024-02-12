@@ -45,7 +45,7 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    //TODO add imu reset button
+    xbox.a().onTrue(Commands.runOnce(drive :: resetYaw , drive));
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
   
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,

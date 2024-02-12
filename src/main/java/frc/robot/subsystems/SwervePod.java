@@ -119,8 +119,19 @@ public class SwervePod extends SubsystemBase {
       turnPod(directionControl.calculate(getAngle(), direction));
   }
   public void drivePod(double drive, double direction) {
-    //TODO put in velocity control
     setDirection(direction);
+    if(manualOveride) {
+      if(Math.abs(drive) > .1){
+        driveMotor.set(drive);
+      }
+      else {
+        driveMotor.set(0);
+      }
+    }
+    else {
+      double setPoint = drive * SPEED_LIMIT;
+      driveMotor.setVoltage(velocityControl.calculate(getSpeed(),setPoint) + ff.calculate(setPoint));
+    }
     if(Math.abs(drive) > .1){
       driveMotor.set(drive);
     }
@@ -132,4 +143,6 @@ public class SwervePod extends SubsystemBase {
     this.manualOveride = manualOveride;
     
   }
+
+
 }
