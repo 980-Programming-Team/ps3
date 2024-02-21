@@ -62,6 +62,7 @@ public class SwervePod extends SubsystemBase {
     //fieldAdjust = 0;
 
     sonic = driveMotor.getEncoder();
+
     sonic.setPositionConversionFactor(((4 / 12.0) * Math.PI) / 8.14);//circumference for 4" wheel divided by 12" to a foot / gear ratio * -> feet
     sonic.setVelocityConversionFactor(((4 / 12.0) * Math.PI) / (8.14 * 60));//circumference for 4" wheel divided by 12" to a foot / gear ratio * convert to seconds -> feet per second
   
@@ -118,6 +119,29 @@ public class SwervePod extends SubsystemBase {
       } 
       turnPod(directionControl.calculate(getAngle(), direction));
   }
+  private boolean optimize(double direction){
+    double currAngle = getAngle();
+    double altDir;
+    if(direction > 0){
+      altDir = direction - 180;
+    }
+    else{
+      altDir = direction + 180;
+    }
+  double normWay = Math.abs(currAngle - direction);
+  double altWay = Math.abs(currAngle - altDir);
+  double normCross;
+  double altCross;
+  if(currAngle >= 0){
+    normCross = (180 - currAngle) + (direction + 180);
+    altCross = (180 - currAngle) + (altDir + 180);    
+  }
+  else{
+  normCross = (180 + currAngle) + (180 - direction);
+  altCross = (180 + currAngle) + (180 - altDir);
+  }
+  return(altWay < normWay && altWay < normCross) || (altCross < normWay && altCross < normCross);
+}
   public void drivePod(double drive, double direction) {
     setDirection(direction);
     if(manualOveride) {
