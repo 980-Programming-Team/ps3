@@ -24,11 +24,11 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController xbox =
       new CommandXboxController(0);
+  //TODO add second controller
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    // Configure the trigger bindings
-    drive.setDefaultCommand(Commands.run(
+     drive.setDefaultCommand(Commands.run(
       () -> drive.podDriver(-xbox.getLeftX(), -xbox.getLeftY(), -xbox.getRightX()),
       drive
     ));
@@ -46,11 +46,7 @@ public class RobotContainer {
    */
   private void configureBindings() {
     xbox.a().onTrue(Commands.runOnce(drive :: resetYaw , drive));
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-  
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-    //m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+
   }
 
   /**

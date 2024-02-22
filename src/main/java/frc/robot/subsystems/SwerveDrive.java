@@ -10,8 +10,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class SwerveDrive extends SubsystemBase {
-  private final double L = 22 + (3/8.0);
-  private final double W = 22 + (3/8.0);
+  private final double L = 22 + (3 / 8.0);//in inches must be measured axel to axel
+  private final double W = 22 + (3 / 8.0);
   private double r;
 
   private SwervePod backleft;
@@ -24,7 +24,9 @@ public class SwerveDrive extends SubsystemBase {
   private int imuErrorCode;
   private double[] ypr;
 
-  private boolean fieldOriented = false;
+  //TODO add boolean turbo variable
+
+  private boolean fieldOriented;
 
   public SwerveDrive() {
    imu = new PigeonIMU(30);
@@ -32,17 +34,25 @@ public class SwerveDrive extends SubsystemBase {
    ypr = new double [3];
    imu.setYaw(0);
 
-   backleft = new SwervePod(4,4);
-   backright = new SwervePod(5,5);
-   frontright = new SwervePod(2,2);
-   frontleft = new SwervePod(3,3);
+   //first argument is the position on the robot (corresponds to the Spark ID not attached to the pod)
+   //second argument is the pod currently in that position (corresponds to the ID of the vortex and encoder on the pod)
+   backleft = new SwervePod(4 , 4);
+   backright = new SwervePod(5 , 5);
+   frontleft = new SwervePod(3 , 3);
+   frontright = new SwervePod(2 , 6);
 
    r = Math.sqrt((L * L) + (W * W));
+
+   //TODO set turbo variable to default to false
+   fieldOriented = true;
   }
+
+  //TODO add field orented setters and turbo setters
 
   public void resetYaw(){
     imu.setYaw(0);
   }  
+
   @Override
   public void periodic() {
     imuErrorCode = imu.getGeneralStatus(imuStatus).value;
@@ -62,10 +72,12 @@ public class SwerveDrive extends SubsystemBase {
       x2 = 0;
     }
 
-    if (fieldOriented) {
+    //TODO setup turbo system to reduce top speed
+
+    if(fieldOriented){
       double yawRad = ypr[0] * Math.PI / 180;
       double temp = y1 * Math.cos(yawRad) + x1 * Math.sin(yawRad);
-      x1 = y1 * Math.sin(yawRad) + x1 * Math.cos(yawRad); //change y1 to negative if clockwise is positive
+      x1 = -y1 * Math.sin(yawRad) + x1 * Math.cos(yawRad);
       y1 = temp;
     }
 
@@ -84,18 +96,6 @@ public class SwerveDrive extends SubsystemBase {
     double frontRightAngle = (Math.atan2 (b, d) / Math.PI) * 180;
     double frontLeftAngle = (Math.atan2 (b, c) / Math.PI) * 180;
 
-    /*SmartDashboard.putNumber("BR Speed", backRightSpeed);
-    SmartDashboard.putNumber("BR Angle", backRightAngle);
-    SmartDashboard.putNumber("BL Speed", backLeftSpeed);
-    SmartDashboard.putNumber("BL Angle", backLeftAngle);
-    SmartDashboard.putNumber("FR Speed", frontRightSpeed);
-    SmartDashboard.putNumber("FR Angle", frontRightAngle);
-    SmartDashboard.putNumber("FL Speed", frontLeftSpeed);
-    SmartDashboard.putNumber("FL Angle", frontLeftAngle);
-    SmartDashboard.putNumber("x1", x1);
-    SmartDashboard.putNumber("y1", y1);
-    SmartDashboard.putNumber("x2", x2);*/
-
     backright.drivePod (backRightSpeed, backRightAngle);
     backleft.drivePod (backLeftSpeed, backLeftAngle);
     frontright.drivePod (frontRightSpeed, frontRightAngle);
@@ -103,5 +103,5 @@ public class SwerveDrive extends SubsystemBase {
     
   }
 
-
+  //TODO add stop method to halt drive and go back to 0 angle
 }

@@ -29,7 +29,7 @@ public class SwervePod extends SubsystemBase {
   private double S_D = 0;
   
   private PIDController velocityControl;
-  private final double SPEED_LIMIT = 11;//Actual top speed is about 11.7, limiting for vel control
+  private final double SPEED_LIMIT = 11;//Actual top speed is about 11.5, limiting for vel control
   private SimpleMotorFeedforward ff;
   private boolean manualOveride;
 
@@ -59,15 +59,13 @@ public class SwervePod extends SubsystemBase {
     this.positionID = positionID;
     driveMotor = new CANSparkMax(positionID, MotorType.kBrushless);
     swerveMotor = new CANSparkFlex(podID + 10, MotorType.kBrushless);
-    //fieldAdjust = 0;
+
+    compass = new CANcoder(podID + 20);
 
     sonic = driveMotor.getEncoder();
-
     sonic.setPositionConversionFactor(((4 / 12.0) * Math.PI) / 8.14);//circumference for 4" wheel divided by 12" to a foot / gear ratio * -> feet
     sonic.setVelocityConversionFactor(((4 / 12.0) * Math.PI) / (8.14 * 60));//circumference for 4" wheel divided by 12" to a foot / gear ratio * convert to seconds -> feet per second
   
-    compass = new CANcoder(podID + 20);
-
     directionControl = new PIDController(S_P, S_I, S_D);
     directionControl.enableContinuousInput(-180, 180);
     
@@ -103,22 +101,23 @@ public class SwervePod extends SubsystemBase {
   }
   
   public void setDirection(double direction) {
-      double altDir;
-      if(direction > 0) {
-        altDir = direction - 180;
-      }
-      else {
-        altDir = direction + 180;
-      }
-      if(Math.abs(getAngle() - direction) > Math.abs(getAngle() - altDir)) {
-        direction = altDir;
-        driveMotor.setInverted(true);
-      }
-      else {
+    double altDir;
+    if(direction > 0) {
+      altDir = direction - 180;
+    }
+    else {
+      altDir = direction + 180;
+    }
+    if(optimize(direction)) {
+      direction = altDir;
+      driveMotor.setInverted(true);
+    }
+    else {
       driveMotor.setInverted(false);
-      } 
-      turnPod(directionControl.calculate(getAngle(), direction));
+    } 
+    turnPod(directionControl.calculate(getAngle(), direction));
   }
+
   private boolean optimize(double direction){
     double currAngle = getAngle();
     double altDir;
@@ -128,20 +127,21 @@ public class SwervePod extends SubsystemBase {
     else{
       altDir = direction + 180;
     }
-  double normWay = Math.abs(currAngle - direction);
-  double altWay = Math.abs(currAngle - altDir);
-  double normCross;
-  double altCross;
-  if(currAngle >= 0){
-    normCross = (180 - currAngle) + (direction + 180);
-    altCross = (180 - currAngle) + (altDir + 180);    
+    double normWay = Math.abs(currAngle - direction);
+    double altWay = Math.abs(currAngle - altDir);
+    double normCross;
+    double altCross;
+    if(currAngle >= 0){
+      normCross = (180 - currAngle) + (direction + 180);
+      altCross = (180 - currAngle) + (altDir + 180);
+    }
+    else{
+      normCross = (currAngle + 180) + (180 - direction);
+      altCross = (currAngle + 180) + (180 - altDir);
+    }
+    return (altWay < normWay && altWay < normCross) || (altCross < normWay && altCross < normCross);
   }
-  else{
-  normCross = (180 + currAngle) + (180 - direction);
-  altCross = (180 + currAngle) + (180 - altDir);
-  }
-  return(altWay < normWay && altWay < normCross) || (altCross < normWay && altCross < normCross);
-}
+
   public void drivePod(double drive, double direction) {
     setDirection(direction);
     if(manualOveride) {
@@ -156,16 +156,10 @@ public class SwervePod extends SubsystemBase {
       double setPoint = drive * SPEED_LIMIT;
       driveMotor.setVoltage(velocityControl.calculate(getSpeed(),setPoint) + ff.calculate(setPoint));
     }
-    if(Math.abs(drive) > .1){
-      driveMotor.set(drive);
-    }
-    else {
-      driveMotor.set(0);
-    }
   }
+
   public void setManualOveride(boolean manualOveride) {
     this.manualOveride = manualOveride;
-    
   }
 
 
