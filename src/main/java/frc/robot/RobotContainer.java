@@ -4,10 +4,15 @@
 
 package frc.robot;
 
+import frc.robot.commands.FireNoteCommand;
+import frc.robot.subsystems.Collector;
+import frc.robot.subsystems.Shooter;
 //import frc.robot.commands.Autos;
 import frc.robot.subsystems.SwerveDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -16,15 +21,31 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
+ * 
+ * Praj Box Documentation
+ * these are the button Id's for each switch
+ * safety switch 1
+ * right 3way up 2
+ * right 3way down 3
+ * button 4
+ * left 3way up 5
+ * left 3way down 6
+ * white switch 7
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final SwerveDrive drive = new SwerveDrive();
+  private final Shooter shooter = new Shooter();
+  private final Collector collector = new Collector();
+
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController xbox =
       new CommandXboxController(0);
-  //TODO add second controller
+  private final CommandXboxController xboxOp =
+      new CommandXboxController(1);
+  private final CommandJoystick prajBox =
+      new CommandJoystick(2);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -32,6 +53,17 @@ public class RobotContainer {
       () -> drive.podDriver(-xbox.getLeftX(), -xbox.getLeftY(), -xbox.getRightX()),
       drive
     ));
+
+    shooter.setDefaultCommand(Commands.run(
+      () -> shooter.fireNoteManual(-xboxOp.getLeftY()),
+      shooter
+      ));
+    
+    collector.setDefaultCommand(Commands.run(
+      () -> collector.spinCollector(-xboxOp.getRightY()),
+      collector
+      ));
+
     configureBindings();
   }
 
@@ -45,7 +77,27 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    xbox.a().onTrue(Commands.runOnce(drive :: resetYaw , drive));
+    xbox.back().onTrue(Commands.runOnce(drive :: resetYaw , drive));
+
+    //shoot for speaker
+    xboxOp.rightBumper().onTrue(new FireNoteCommand(
+      () -> -xboxOp.getRightTriggerAxis(), 
+      false,
+      shooter , collector
+      ));
+//shoot for amp    
+    xboxOp.start().onTrue(new FireNoteCommand(
+      () -> -xboxOp.getRightTriggerAxis(), 
+      true,
+      shooter , collector
+      ));
+    
+    xboxOp.leftBumper().onTrue(Commands.runOnce(shooter :: stopShooter, shooter));
+
+    xboxOp.b().onTrue(Commands.runOnce(collector :: deployCollector, collector));
+    xboxOp.y().onTrue(Commands.runOnce(collector :: retractCollector, collector));
+
+//TODO add manual collector deploy
 
   }
 
