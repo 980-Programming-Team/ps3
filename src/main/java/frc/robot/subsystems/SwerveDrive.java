@@ -24,7 +24,7 @@ public class SwerveDrive extends SubsystemBase {
   private int imuErrorCode;
   private double[] ypr;
 
-  //TODO add boolean turbo variable
+  private boolean turbo;
 
   private boolean fieldOriented;
 
@@ -43,15 +43,39 @@ public class SwerveDrive extends SubsystemBase {
 
    r = Math.sqrt((L * L) + (W * W));
 
-   //TODO set turbo variable to default to false
+   turbo = false;
    fieldOriented = true;
   }
 
-  //TODO add field orented setters and turbo setters
+  public void enableTurbo(){
+    turbo = true;
+  }
+  public void disableTurbo(){
+    turbo = false;
+  }
 
+  public void enableFieldOrientedDrive(){
+    fieldOriented = true;
+  }
+  public void diableFieldOrientedDrive(){
+    fieldOriented = false;
+  }
+
+  public double getYaw(){
+    return ypr[0];
+  }
   public void resetYaw(){
     imu.setYaw(0);
   }  
+  public void resetDistances(){
+    backleft.resetDistance();
+    backright.resetDistance();
+    frontleft.resetDistance();
+    frontright.resetDistance();
+  }
+  public double getAverageDistance(){
+    return (backleft.getDistance() + backright.getDistance() + frontleft.getDistance() + frontright.getDistance()) / 4.0;
+  }
 
   @Override
   public void periodic() {
@@ -72,7 +96,11 @@ public class SwerveDrive extends SubsystemBase {
       x2 = 0;
     }
 
-    //TODO setup turbo system to reduce top speed
+    if(!turbo){
+      y1 *= .5;
+      x1 *= .5;
+      x2 *= .5;
+    }
 
     if(fieldOriented){
       double yawRad = ypr[0] * Math.PI / 180;
@@ -103,5 +131,4 @@ public class SwerveDrive extends SubsystemBase {
     
   }
 
-  //TODO add stop method to halt drive and go back to 0 angle
 }

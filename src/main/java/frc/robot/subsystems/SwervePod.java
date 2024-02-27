@@ -88,7 +88,9 @@ public class SwervePod extends SubsystemBase {
 
   public double getDistance() {
     return sonic.getPosition();
-
+  }
+  public void resetDistance(){
+    sonic.setPosition(0);
   }
 
   public double getAngle() {

@@ -4,16 +4,19 @@
 
 package frc.robot;
 
+import frc.robot.commands.AutoCruise;
 import frc.robot.commands.FireNoteCommand;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Collector;
 import frc.robot.subsystems.Shooter;
 //import frc.robot.commands.Autos;
 import frc.robot.subsystems.SwerveDrive;
+import frc.robot.subsystems.Targeting;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -40,6 +43,13 @@ public class RobotContainer {
   private final Shooter shooter = new Shooter();
   private final Collector collector = new Collector();
   private final Climber climber = new Climber();
+  private final Targeting targeting = new Targeting();
+
+  private final Command leave = new AutoCruise(1, 0, 0, 3.4, drive);
+  private final SequentialCommandGroup shootLeave = new SequentialCommandGroup(
+    new FireNoteCommand((Double)1, shooter, collector, targeting) ,
+    new AutoCruise(1, 0, 0, 3.4, drive)
+  );
 
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -81,14 +91,12 @@ public class RobotContainer {
     //shoot for speaker
     xboxOp.rightBumper().onTrue(new FireNoteCommand(
       () -> -xboxOp.getRightTriggerAxis(), 
-      false,
-      shooter , collector
+      shooter , collector , targeting
       ));
-//shoot for amp    
-    xboxOp.start().onTrue(new FireNoteCommand(
+    //shoot for amp    
+    xboxOp.start().onTrue(new FireNoteCommand(//TODO fix
       () -> -xboxOp.getRightTriggerAxis(), 
-      true,
-      shooter , collector
+      shooter , collector , targeting
       ));
     
     xboxOp.leftBumper().onTrue(Commands.runOnce(shooter :: stopShooter, shooter));

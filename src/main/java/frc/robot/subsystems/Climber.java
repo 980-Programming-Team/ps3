@@ -73,7 +73,7 @@ public class Climber extends SubsystemBase {
           left = 0;
         }
         if(right < 0){
-          right  = 0;
+          right = 0;
         }
       }
       leftClimb.set(left);

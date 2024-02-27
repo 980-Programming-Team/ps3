@@ -36,16 +36,22 @@ public class Shooter extends SubsystemBase {
   tf.follow(tl, !tl.getInverted());
   tEncoder = tl.getEncoder();
   tControl = new PIDController(.001, 0, 0);
+  tControl.setTolerance(10, 50);
 
   bl = new CANSparkMax(42, MotorType.kBrushless);
-  bl.setInverted(false);
+  bl.setInverted(true);
   bf = new CANSparkMax(43, MotorType.kBrushless);
   bf.follow(bl, !bl.getInverted());
   bEncoder = bl.getEncoder();
   bControl = new PIDController(.002, 0, 0);
+  bControl.setTolerance(10, 50);
 
   ff = new SimpleMotorFeedforward(SHOOTER_FF_KS, SHOOTER_FF_KV);
 
+  }
+
+  public boolean isReady(){
+    return tControl.atSetpoint() && bControl.atSetpoint();
   }
 
   @Override
@@ -67,15 +73,14 @@ public class Shooter extends SubsystemBase {
     }
 
   }
-  public void fireNote(int rpm, boolean toAmp) {
-    double ampMod;
-    if (toAmp) {
-      ampMod = 0.2;
-    }
-    else {
-      ampMod = 1;
-    }
-    double setPoint = rpm;
+  public void fireNote(int rpmHigh, int rpmLow) {
+    tl.setVoltage(tControl.calculate(tEncoder.getVelocity(), rpmHigh) + ff.calculate(rpmHigh));
+    bl.setVoltage(bControl.calculate(bEncoder.getVelocity(), rpmLow) + ff.calculate(rpmLow));
+
+  }
+  public void fireNoteAmp() {
+    double ampMod = .2;
+    double setPoint = 1500;
     tl.setVoltage(ampMod * (tControl.calculate(tEncoder.getVelocity(), setPoint) + ff.calculate(setPoint)));
     bl.setVoltage((bControl.calculate(bEncoder.getVelocity(), setPoint) + ff.calculate(setPoint)));
 
