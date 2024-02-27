@@ -5,15 +5,17 @@
 package frc.robot;
 
 import frc.robot.commands.FireNoteCommand;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Collector;
 import frc.robot.subsystems.Shooter;
 //import frc.robot.commands.Autos;
 import frc.robot.subsystems.SwerveDrive;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -37,6 +39,7 @@ public class RobotContainer {
   private final SwerveDrive drive = new SwerveDrive();
   private final Shooter shooter = new Shooter();
   private final Collector collector = new Collector();
+  private final Climber climber = new Climber();
 
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -44,8 +47,9 @@ public class RobotContainer {
       new CommandXboxController(0);
   private final CommandXboxController xboxOp =
       new CommandXboxController(1);
-  private final CommandJoystick prajBox =
-      new CommandJoystick(2);
+  private final Joystick prajBox =
+      new Joystick(2);
+  private Trigger enableClimber = new JoystickButton(prajBox, 1);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -54,13 +58,8 @@ public class RobotContainer {
       drive
     ));
 
-    shooter.setDefaultCommand(Commands.run(
-      () -> shooter.fireNoteManual(-xboxOp.getLeftY()),
-      shooter
-      ));
-    
     collector.setDefaultCommand(Commands.run(
-      () -> collector.spinCollector(-xboxOp.getRightY()),
+      () -> collector.manualOverride(-xboxOp.getRightY() , -xboxOp.getLeftY()),
       collector
       ));
 
@@ -97,7 +96,12 @@ public class RobotContainer {
     xboxOp.b().onTrue(Commands.runOnce(collector :: deployCollector, collector));
     xboxOp.y().onTrue(Commands.runOnce(collector :: retractCollector, collector));
 
-//TODO add manual collector deploy
+    enableClimber.whileTrue(Commands.run(
+      () -> climber.runClimbers(xboxOp.getLeftY(), xboxOp.getRightY(), 
+      true, prajBox.getRawButton(4)),
+      climber
+      ));
+
 
   }
 

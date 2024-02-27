@@ -45,6 +45,10 @@ public class Collector extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
+  public void manualOverride(double speed , double dSpeed){
+    deploy.set(dSpeed);
+    spinCollector(speed);
+  }
 
   public void deployCollector(){
     down = true;

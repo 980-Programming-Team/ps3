@@ -59,7 +59,7 @@ public class Climber extends SubsystemBase {
     return rightEncoder.getPosition();
   }
 
-  public void runClimbers(double left , double right){
+  public void runClimbers(double left , double right , boolean climbEnable , boolean reverseSafetyOff){
     if(Math.abs(left) < .1){
       left = 0;
     }

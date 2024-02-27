@@ -81,7 +81,6 @@ public class Shooter extends SubsystemBase {
 
   }
   public void stopShooter() {
-    tl.set(0);
-    bl.set(0);
+    
   }
 }
