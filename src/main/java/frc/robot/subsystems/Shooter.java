@@ -36,15 +36,15 @@ public class Shooter extends SubsystemBase {
   tf.follow(tl, !tl.getInverted());
   tEncoder = tl.getEncoder();
   tControl = new PIDController(.001, 0, 0);
-  tControl.setTolerance(10, 50);
+  tControl.setTolerance(10, 100);
 
   bl = new CANSparkMax(42, MotorType.kBrushless);
   bl.setInverted(true);
   bf = new CANSparkMax(43, MotorType.kBrushless);
-  bf.follow(bl, !bl.getInverted());
+  bf.follow(bl, bl.getInverted());
   bEncoder = bl.getEncoder();
   bControl = new PIDController(.002, 0, 0);
-  bControl.setTolerance(10, 50);
+  bControl.setTolerance(10, 100);
 
   ff = new SimpleMotorFeedforward(SHOOTER_FF_KS, SHOOTER_FF_KV);
 

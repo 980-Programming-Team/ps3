@@ -57,7 +57,7 @@ public class SwerveDrive extends SubsystemBase {
   public void enableFieldOrientedDrive(){
     fieldOriented = true;
   }
-  public void diableFieldOrientedDrive(){
+  public void disableFieldOrientedDrive(){
     fieldOriented = false;
   }
 

@@ -31,7 +31,7 @@ public class NotelSeeker extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    drivetrain.diableFieldOrientedDrive();
+    drivetrain.disableFieldOrientedDrive();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -42,7 +42,7 @@ public class NotelSeeker extends Command {
       drivetrain.podDriver(0, 0, 0.5);
     } //end if 
     else {
-      collector.spinCollector(-1);
+      collector.intake();
       drivetrain.podDriver(dize[0] / 100.0, 1, 0);
     } //end else
   } //end execute
@@ -50,7 +50,7 @@ public class NotelSeeker extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    collector.spinCollector(0);
+    collector.off();
     drivetrain.podDriver(0, 0, 0);
     drivetrain.enableFieldOrientedDrive();
   } //ends end

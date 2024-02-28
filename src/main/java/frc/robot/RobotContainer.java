@@ -4,7 +4,10 @@
 
 package frc.robot;
 
+import frc.robot.commands.AimTele;
 import frc.robot.commands.AutoCruise;
+import frc.robot.commands.AutoPickup;
+import frc.robot.commands.FireNoteAuto;
 import frc.robot.commands.FireNoteCommand;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Collector;
@@ -45,10 +48,14 @@ public class RobotContainer {
   private final Climber climber = new Climber();
   private final Targeting targeting = new Targeting();
 
-  private final Command leave = new AutoCruise(1, 0, 0, 3.4, drive);
+  private final Command leave = new AutoCruise(1, 0, 0, 3.5, drive);
   private final SequentialCommandGroup shootLeave = new SequentialCommandGroup(
-    new FireNoteCommand((Double)1, shooter, collector, targeting) ,
+    new FireNoteAuto(shooter, collector , targeting),
     new AutoCruise(1, 0, 0, 3.4, drive)
+  );
+  private final SequentialCommandGroup twoNoteDR = new SequentialCommandGroup(
+    new FireNoteAuto(shooter, collector , targeting),
+    Commands.deadline(new AutoPickup(collector) , new AutoCruise(1, 0, 0, 6.6, drive))
   );
 
 
@@ -60,16 +67,19 @@ public class RobotContainer {
   private final Joystick prajBox =
       new Joystick(2);
   private Trigger enableClimber = new JoystickButton(prajBox, 1);
+  private Trigger overrideCollector = new JoystickButton(prajBox, 7);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-     drive.setDefaultCommand(Commands.run(
+    //regular Drive
+    drive.setDefaultCommand(Commands.run(
       () -> drive.podDriver(-xbox.getLeftX(), -xbox.getLeftY(), -xbox.getRightX()),
       drive
     ));
 
+    //collector automation
     collector.setDefaultCommand(Commands.run(
-      () -> collector.manualOverride(-xboxOp.getRightY() , -xboxOp.getLeftY()),
+      () -> collector.holdCollector(xboxOp.a().getAsBoolean() , xboxOp.y().getAsBoolean()),
       collector
       ));
 
@@ -86,31 +96,42 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
+    //reset imu, point shooter at driver wall
     xbox.back().onTrue(Commands.runOnce(drive :: resetYaw , drive));
+    //turbo
+    xbox.rightTrigger()
+      .onTrue(Commands.runOnce(drive :: enableTurbo, drive))
+      .onFalse(Commands.runOnce(drive :: disableTurbo, drive));
+    //target speaker
+    xbox.rightBumper().whileTrue(new AimTele(0, drive, targeting));
+    //target amp
+    xbox.leftBumper().whileTrue((new AimTele(2, drive, targeting)));
 
     //shoot for speaker
-    xboxOp.rightBumper().onTrue(new FireNoteCommand(
-      () -> -xboxOp.getRightTriggerAxis(), 
-      shooter , collector , targeting
-      ));
+    xboxOp.rightBumper().onTrue(new FireNoteCommand(shooter , targeting));
     //shoot for amp    
-    xboxOp.start().onTrue(new FireNoteCommand(//TODO fix
-      () -> -xboxOp.getRightTriggerAxis(), 
-      shooter , collector , targeting
-      ));
-    
+    xboxOp.start().onTrue(Commands.run(shooter :: fireNoteAmp , shooter));
+    //turn shooter off
     xboxOp.leftBumper().onTrue(Commands.runOnce(shooter :: stopShooter, shooter));
 
-    xboxOp.b().onTrue(Commands.runOnce(collector :: deployCollector, collector));
-    xboxOp.y().onTrue(Commands.runOnce(collector :: retractCollector, collector));
-
-    enableClimber.whileTrue(Commands.run(
-      () -> climber.runClimbers(xboxOp.getLeftY(), xboxOp.getRightY(), 
-      true, prajBox.getRawButton(4)),
-      climber
+    //white prajbox switch on overrides collector automation
+    overrideCollector.whileTrue(Commands.run(
+      () -> collector.manualOverride(-xboxOp.getRightY() , -xboxOp.getLeftY()),
+      collector
       ));
+    //collector out
+    xboxOp.rightTrigger(.5).whileTrue(Commands.run(collector :: fire, collector));
+    //collector in
+    xboxOp.leftTrigger(.5).whileTrue(Commands.run(collector :: intake, collector));    
 
-
+    //prajbox safety switch on activates climbers on sticks, disables collector
+    //hold button to reverse
+    enableClimber.whileTrue(Commands.deadline(
+      Commands.run(() -> climber.runClimbers(-xboxOp.getLeftY(), -xboxOp.getRightY(), 
+        true, prajBox),
+        climber),
+      Commands.run(collector :: off, collector)
+      ));
   }
 
   /**

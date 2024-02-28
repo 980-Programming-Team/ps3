@@ -8,6 +8,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -59,30 +60,22 @@ public class Climber extends SubsystemBase {
     return rightEncoder.getPosition();
   }
 
-  public void runClimbers(double left , double right , boolean climbEnable , boolean reverseSafetyOff){
+  public void runClimbers(double left , double right , boolean climbEnable , Joystick prajBox){
     if(Math.abs(left) < .1){
       left = 0;
     }
     if(Math.abs(right) < .1){
       right = 0;
     }
-
-    if(climbEnable){
-      if(!reverseSafetyOff){
-        if(left < 0){
-          left = 0;
-        }
-        if(right < 0){
-          right = 0;
-        }
+    if(!prajBox.getRawButton(4)){
+      if(left < 0){
+        left = 0;
       }
-      leftClimb.set(left);
-      rightClimb.set(right);
-
+      if(right < 0){
+        right = 0;
+      }
     }
-    else{
-      leftClimb.set(0);
-      rightClimb.set(0);
-    }
+    leftClimb.set(left);
+    rightClimb.set(right);
   }
 }

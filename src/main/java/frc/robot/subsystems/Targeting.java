@@ -94,12 +94,14 @@ public class Targeting extends SubsystemBase {
     SmartDashboard.putNumber("limelight x", x);
     SmartDashboard.putNumber("limelight y", y);
     SmartDashboard.putString("Targeting", targetingWhat);
-    SmartDashboard.putNumber("range", calcRange(whichTarget));
+    SmartDashboard.putNumber("range", calcRange());
     setSide(sideChooser.getSelected());
   }
 
-  public void changeTag(int tag){//set according to which tag is in which pipeline
-    limelight.getEntry("pipeline").setNumber(tag);
+  //0 speaker, 1 altSpeaker, 2 amp, 3 source left, 4 stage back
+  public void changeTag(int whichTarget){//set according to which tag is in which pipeline
+    this.whichTarget = whichTarget;
+    limelight.getEntry("pipeline").setNumber(pipelines[whichTarget]);
   }
 
   public void setSide(boolean isRed){
@@ -109,6 +111,9 @@ public class Targeting extends SubsystemBase {
     else{
       pipelines = bluePipelines;
     }
+  }
+  public boolean getSide(){
+    return sideChooser.getSelected();
   }
 
   public double getValidTarget(){
@@ -134,8 +139,7 @@ public class Targeting extends SubsystemBase {
   }
 
   //calculate horizontal range to target
-  public double calcRange(int whichTarget) {//0 speaker/source, 1 altSpeaker, 2 amp, 3 source left, 4 stage back
-    changeTag(pipelines[whichTarget]);
+  public double calcRange() {
     double height;
     if(whichTarget == 0){
       height = HEIGHT_OF_SPEAKER;
